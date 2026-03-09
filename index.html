@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文拼写小达人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { text-align: center; color: #5a67d8; margin-bottom: 10px; font-size: 2.2em; }
+        .subtitle { text-align: center; color: #718096; margin-bottom: 30px; font-size: 1.1em; }
+        .grade-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .grade-btn {
+            padding: 12px 20px; border: 3px solid #5a67d8; background: white; color: #5a67d8;
+            border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;
+        }
+        .grade-btn:hover, .grade-btn.active { background: #5a67d8; color: white; transform: translateY(-2px); }
+        .mode-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .mode-btn {
+            padding: 10px 25px; border: 2px solid #48bb78; background: white; color: #48bb78;
+            border-radius: 20px; cursor: pointer; font-size: 0.95em; transition: all 0.3s;
+        }
+        .mode-btn:hover, .mode-btn.active { background: #48bb78; color: white; }
+        .mode-btn:disabled { border-color: #cbd5e0; color: #cbd5e0; cursor: not-allowed; }
+        .mode-btn:disabled:hover { background: white; }
+        .game-area { display: none; }
+        .game-area.active { display: block; }
+        .progress-bar { background: #e2e8f0; height: 20px; border-radius: 10px; margin-bottom: 25px; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #48bb78, #38a169); height: 100%; border-radius: 10px; transition: width 0.5s; }
+        .stats { display: flex; justify-content: space-around; margin-bottom: 25px; text-align: center; }
+        .stat-item { background: #f7fafc; padding: 15px 25px; border-radius: 15px; }
+        .stat-label { color: #718096; font-size: 0.9em; }
+        .stat-value { color: #2d3748; font-size: 1.8em; font-weight: bold; }
+        .word-display { text-align: center; margin: 40px 0; }
+        .word-btn {
+            background: #5a67d8; color: white; border: none; padding: 20px 40px; font-size: 1.3em;
+            border-radius: 50px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px;
+            transition: all 0.3s; box-shadow: 0 4px 15px rgba(90,103,216,0.4);
+        }
+        .word-btn:hover { transform: scale(1.05); background: #4c51bf; }
+        .word-btn:disabled { background: #cbd5e0; cursor: not-allowed; transform: none; }
+        .input-area { text-align: center; margin: 30px 0; }
+        .spelling-input {
+            width: 100%; padding: 20px; font-size: 1.5em; border: 3px solid #e2e8f0;
+            border-radius: 15px; text-align: center; text-transform: lowercase; transition: border-color 0.3s;
+        }
+        .spelling-input:focus { outline: none; border-color: #5a67d8; }
+        .spelling-input.correct { border-color: #48bb78; background: #f0fff4; }
+        .spelling-input.wrong { border-color: #f56565; background: #fff5f5; }
+        .buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .btn { padding: 15px 35px; border: none; border-radius: 25px; font-size: 1.1em; cursor: pointer; transition: all 0.3s; font-weight: bold; }
+        .btn-primary { background: #5a67d8; color: white; }
+        .btn-primary:hover { background: #4c51bf; transform: translateY(-2px); }
+        .btn-secondary { background: #edf2f7; color: #4a5568; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-warning:hover { background: #dd6b20; }
+        .feedback { text-align: center; margin: 20px 0; padding: 20px; border-radius: 15px; display: none; }
+        .feedback.show { display: block; animation: bounce 0.5s; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .feedback.correct { background: #c6f6d5; color: #22543d; }
+        .feedback.wrong { background: #fed7d7; color: #742a2a; }
+        .feedback-text { font-size: 1.3em; font-weight: bold; }
+        .correct-spelling { font-size: 1.8em; margin-top: 10px; color: #c53030; }
+        .result-screen { display: none; text-align: center; }
+        .result-screen.active { display: block; }
+        .trophy { font-size: 5em; margin-bottom: 20px; }
+        .final-score { font-size: 3em; color: #5a67d8; font-weight: bold; margin-bottom: 20px; }
+        .result-message { font-size: 1.3em; color: #4a5568; margin-bottom: 30px; }
+        .mistakes-review { background: #fff5f5; border-radius: 15px; padding: 20px; margin: 20px 0; text-align: left; }
+        .mistake-item { padding: 10px; margin: 5px 0; background: white; border-radius: 8px; display: flex; justify-content: space-between; }
+        .start-screen { text-align: center; }
+        .difficulty-hint { color: #718096; font-size: 0.95em; margin-top: 10px; line-height: 1.6; }
+        .wordbook-section { background: #ebf8ff; border-radius: 15px; padding: 15px; margin: 15px 0; text-align: left; }
+        .wordbook-title { font-weight: bold; color: #2b6cb0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .wordbook-count { background: #4299e1; color: white; padding: 2px 10px; border-radius: 10px; font-size: 0.85em; }
+        .wordbook-item { display: inline-block; background: white; padding: 5px 12px; margin: 3px; border-radius: 15px; font-size: 0.9em; border: 1px solid #bee3f8; }
+        .hint-text { color: #718096; font-size: 0.9em; margin-top: 10px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>英文拼写小达人</h1>
+        <p class="subtitle">Grade 4-12 Spelling Practice</p>
+
+        <div class="start-screen" id="startScreen">
+            <p style="margin-bottom: 20px; color: #4a5568;">选择年级和模式：</p>
+            
+            <div class="grade-selector" style="flex-wrap: wrap; gap: 10px;">
+                <button class="grade-btn" onclick="startGame(4)">G4</button>
+                <button class="grade-btn" onclick="startGame(5)">G5</button>
+                <button class="grade-btn" onclick="startGame(6)">G6</button>
+                <button class="grade-btn" onclick="startGame(7)">G7</button>
+                <button class="grade-btn" onclick="startGame(8)">G8</button>
+                <button class="grade-btn" onclick="startGame(9)">G9</button>
+                <button class="grade-btn" onclick="startGame(10)">G10</button>
+                <button class="grade-btn" onclick="startGame(11)">G11</button>
+                <button class="grade-btn" onclick="startGame(12)">G12</button>
+            </div>
+
+            <div class="mode-selector">
+                <button class="mode-btn active" id="normalMode" onclick="setMode('normal')">常规练习</button>
+                <button class="mode-btn" id="reviewMode" onclick="setMode('review')" disabled>错题复习</button>
+            </div>
+
+            <div class="wordbook-section" id="wordbookSection" style="display:none;">
+                <div class="wordbook-title">
+                    <span>我的错词本</span>
+                    <span class="wordbook-count" id="wordbookCount">0词</span>
+                </div>
+                <div id="wordbookList"></div>
+                <button class="btn btn-warning" onclick="clearWordbook()" style="margin-top:10px; padding:8px 20px; font-size:0.9em;">清空错词本</button>
+            </div>
+
+            <div class="difficulty-hint">
+                <p><strong>G4:</strong> 300个基础常用词汇</p>
+                <p><strong>G5:</strong> 300个学术进阶词汇</p>
+                <p><strong>G6-8:</strong> 抽象概念与科学术语</p>
+                <p><strong>G9-12:</strong> SAT及大学预备词汇</p>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">进度</div>
+                    <div class="stat-value" id="progressText">1/10</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">得分</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">连对</div>
+                    <div class="stat-value" id="streak">0</div>
+                </div>
+            </div>
+
+            <div class="word-display">
+                <button class="word-btn" id="playBtn" onclick="playWord()">
+                    <span>点击听单词</span>
+                </button>
+            </div>
+
+            <div class="hint-text" id="hintText"></div>
+
+            <div class="feedback" id="feedback">
+                <div class="feedback-text" id="feedbackText"></div>
+                <div class="correct-spelling" id="correctSpelling"></div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" class="spelling-input" id="spellingInput" placeholder="输入你听到的单词..." onkeypress="if(event.key==='Enter') checkSpelling()">
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="playWord()">再听一遍</button>
+                <button class="btn btn-primary" id="checkBtn" onclick="checkSpelling()">检查</button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextWord()" style="display:none;">下一个</button>
+            </div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="trophy" id="trophy">奖杯</div>
+            <div class="final-score" id="finalScore">0/100</div>
+            <div class="result-message" id="resultMessage"></div>
+            
+            <div class="mistakes-review" id="mistakesReview" style="display:none;">
+                <h3 style="margin-bottom: 15px; color: #c53030;">本次错题</h3>
+                <div id="mistakesList"></div>
+            </div>
+
+            <div class="wordbook-section" id="resultWordbook" style="display:none;">
+                <div class="wordbook-title">
+                    <span>错词本新增</span>
+                    <span class="wordbook-count" id="resultWordbookCount">0词</span>
+                </div>
+                <div id="resultWordbookList"></div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="restartGame()">再练一次</button>
+                <button class="btn btn-warning" onclick="startReviewMode()">重点练习</button>
+                <button class="btn btn-primary" onclick="changeGrade()">换年级</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// G4词库 - 300个基础常用词汇
+const grade4Words = [
+{word:"about",sentence:"Tell me about your day."},{word:"above",sentence:"The picture is above the desk."},{word:"across",sentence:"Walk across the street carefully."},{word:"address",sentence:"What is your home address?"},{word:"afraid",sentence:"Don't be afraid of the dark."},{word:"after",sentence:"We eat dinner after school."},{word:"again",sentence:"Please say that again."},{word:"against",sentence:"Don't lean against the wall."},{word:"almost",sentence:"It's almost time to go."},{word:"already",sentence:"I've already finished my homework."},
+{word:"always",sentence:"She always arrives on time."},{word:"amount",sentence:"What is the total amount?"},{word:"animal",sentence:"My favorite animal is a tiger."},{word:"another",sentence:"Can I have another cookie?"},{word:"answer",sentence:"What is the answer to this question?"},{word:"anyone",sentence:"Does anyone know the answer?"},{word:"anything",sentence:"Is there anything I can help with?"},{word:"around",sentence:"Look around the room."},{word:"arrive",sentence:"We will arrive at noon."},{word:"beautiful",sentence:"The sunset was beautiful yesterday."},
+{word:"because",sentence:"I stayed home because it was raining."},{word:"become",sentence:"She wants to become a doctor."},{word:"before",sentence:"Wash your hands before dinner."},{word:"begin",sentence:"Let's begin the lesson now."},{word:"behind",sentence:"The cat is hiding behind the door."},{word:"believe",sentence:"I believe you can do it!"},{word:"below",sentence:"The temperature is below zero."},{word:"between",sentence:"The store is between the bank and the library."},{word:"birthday",sentence:"Happy birthday to you!"},{word:"bottom",sentence:"The book is at the bottom of my bag."}
+];
+
+// G5词库 - 300个学术进阶词汇
+const grade5Words = [
+{word:"accomplish",sentence:"You can accomplish anything with hard work."},{word:"accurate",sentence:"Make sure your answer is accurate."},{word:"anonymous",sentence:"The author remained anonymous."},{word:"apparent",sentence:"It was apparent that she was tired."},{word:"approximate",sentence:"Give me an approximate number."},{word:"conscience",sentence:"My conscience told me to tell the truth."},{word:"conscious",sentence:"Are you conscious of the time?"},{word:"consequence",sentence:"Every action has a consequence."},{word:"comparison",sentence:"Let's make a comparison."},{word:"concentrate",sentence:"Concentrate on your homework."}
+];
+
+// 其他年级词库
+const wordBank = {
+    4: grade4Words,
+    5: grade5Words,
+    6: [{word:"abbreviate",sentence:"We abbreviate December as Dec."},{word:"absence",sentence:"His absence from class was noticed."},{word:"abundant",sentence:"The harvest was abundant this year."},{word:"academic",sentence:"She has excellent academic performance."},{word:"accelerate",sentence:"The car began to accelerate rapidly."},{word:"accumulate",sentence:"Dust began to accumulate on the shelf."},{word:"analyze",sentence:"We need to analyze the data carefully."},{word:"appropriate",sentence:"Please wear appropriate clothing for the hike."},{word:"associate",sentence:"I associate summer with ice cream."},{word:"assume",sentence:"Don't assume anything without evidence."}],
+    7: [{word:"acknowledge",sentence:"He refused to acknowledge his mistake."},{word:"ambiguous",sentence:"His answer was ambiguous and unclear."},{word:"analogy",sentence:"She drew an analogy between the two situations."},{word:"anticipate",sentence:"We anticipate good results from the experiment."},{word:"arbitrary",sentence:"The decision seemed completely arbitrary."},{word:"assess",sentence:"We need to assess the damage first."},{word:"authority",sentence:"Who has the authority to make this decision?"},{word:"bias",sentence:"The study showed a clear bias against women."},{word:"challenge",sentence:"This job will be a real challenge for you."},{word:"clause",sentence:"This sentence has a dependent clause."}],
+    8: [{word:"abstract",sentence:"Love is an abstract concept."},{word:"academic",sentence:"His academic achievements are impressive."},{word:"accompany",sentence:"She asked me to accompany her to the dance."},{word:"accumulate",sentence:"Debts began to accumulate rapidly."},{word:"adapt",sentence:"We need to adapt to the new environment."},{word:"advocate",sentence:"She is a strong advocate for human rights."},{word:"aesthetic",sentence:"The building has great aesthetic appeal."},{word:"allocate",sentence:"We need to allocate more funds to education."},{word:"alter",sentence:"I had to alter my plans at the last minute."},{word:"alternative",sentence:"Do we have an alternative solution?"}],
+    9: [{word:"abundant",sentence:"The region has abundant natural resources."},{word:"accumulate",sentence:"Evidence began to accumulate against him."},{word:"accurate",sentence:"Make sure your measurements are accurate."},{word:"acknowledge",sentence:"She refused to acknowledge defeat."},{word:"acquire",sentence:"He wants to acquire new skills."},{word:"adequate",sentence:"The food was adequate but not excellent."},{word:"advocate",sentence:"He advocates for free education."},{word:"aesthetic",sentence:"The painting has aesthetic value."},{word:"alleviate",sentence:"Medicine can alleviate the pain."},{word:"ambiguous",sentence:"The contract's wording is ambiguous."}],
+    10: [{word:"abhor",sentence:"I abhor violence in any form."},{word:"abstract",sentence:"The painting is quite abstract."},{word:"abundant",sentence:"Resources were abundant in this region."},{word:"acclaim",sentence:"The novel received critical acclaim."},{word:"accommodate",sentence:"The hotel can accommodate 500 guests."},{word:"accord",sentence:"The two countries signed a peace accord."},{word:"adamant",sentence:"He was adamant about his decision."},{word:"adept",sentence:"She is adept at solving puzzles."},{word:"adhere",sentence:"The sticker will adhere to any surface."},{word:"adverse",sentence:"The drug has adverse side effects."}],
+    11: [{word:"aberration",sentence:"This failure was an aberration, not the norm."},{word:"abstain",sentence:"He decided to abstain from voting."},{word:"acclaim",sentence:"The film received widespread acclaim."},{word:"acquiesce",sentence:"She finally acquiesced to their demands."},{word:"acrid",sentence:"The acrid smell filled the room."},{word:"adamant",sentence:"She remained adamant in her refusal."},{word:"adept",sentence:"He is adept at handling difficult situations."},{word:"adulation",sentence:"The celebrity was met with adulation."},{word:"aesthetic",sentence:"The building has aesthetic appeal."},{word:"affable",sentence:"He has an affable personality."}],
+    12: [{word:"abate",sentence:"The storm began to abate."},{word:"aberrant",sentence:"This is aberrant behavior for him."},{word:"abeyance",sentence:"The project is in abeyance for now."},{word:"abscond",sentence:"The thief absconded with the jewels."},{word:"abstemious",sentence:"He leads an abstemious lifestyle."},{word:"abstruse",sentence:"The theory is too abstruse for beginners."},{word:"accede",sentence:"She acceded to their request."},{word:"accolade",sentence:"He received the highest accolade."},{word:"accost",sentence:"A stranger accosted him on the street."},{word:"acerbic",sentence:"His acerbic wit offended some people."}]
+};
+
+let currentGrade = 4;
+let currentMode = 'normal';
+let currentWords = [];
+let currentIndex = 0;
+let score = 0;
+let streak = 0;
+let mistakes = [];
+let currentWord = null;
+let wordbook = [];
+
+function loadWordbook() {
+    const saved = localStorage.getItem('spellingWordbook');
+    if (saved) {
+        wordbook = JSON.parse(saved);
+        updateWordbookDisplay();
+    }
+}
+
+function saveWordbook() {
+    localStorage.setItem('spellingWordbook', JSON.stringify(wordbook));
+    updateWordbookDisplay();
+}
+
+function updateWordbookDisplay() {
+    const section = document.getElementById('wordbookSection');
+    const count = document.getElementById('wordbookCount');
+    const list = document.getElementById('wordbookList');
+    const reviewBtn = document.getElementById('reviewMode');
+    
+    if (wordbook.length > 0) {
+        section.style.display = 'block';
+        count.textContent = wordbook.length + '词';
+        list.innerHTML = wordbook.map(w => '<span class="wordbook-item" onclick="speak(\''+w+'\')" style="cursor:pointer;">'+w+'</span>').join('');
+        reviewBtn.disabled = false;
+    } else {
+        section.style.display = 'none';
+        reviewBtn.disabled = true;
+    }
+}
+
+function addToWordbook(word) {
+    if (!wordbook.includes(word)) {
+        wordbook.push(word);
+        saveWordbook();
+    }
+}
+
+function clearWordbook() {
+    if (confirm('确定要清空错词本吗？')) {
+        wordbook = [];
+        saveWordbook();
+        setMode('normal');
+    }
+}
+
+function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.8;
+    speechSynthesis.speak(utterance);
+}
+
+function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('normalMode').classList.toggle('active', mode === 'normal');
+    document.getElementById('reviewMode').classList.toggle('active', mode === 'review');
+}
+
+function shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
+
+function startGame(grade) {
+    currentGrade = grade;
+    
+    if (currentMode === 'review' && wordbook.length > 0) {
+        currentWords = wordbook.map(w => ({ word: w, sentence: 'Practice the word: ' + w }));
+    } else {
+        const allWords = wordBank[grade] || wordBank[4];
+        currentWords = shuffleArray(allWords).slice(0, 10);
+    }
+    
+    currentIndex = 0;
+    score = 0;
+    streak = 0;
+    mistakes = [];
+    
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('gameArea').classList.add('active');
+    document.getElementById('resultScreen').classList.remove('active');
+    
+    updateStats();
+    loadWord();
+}
+
+function loadWord() {
+    currentWord = currentWords[currentIndex];
+    document.getElementById('spellingInput').value = '';
+    document.getElementById('spellingInput').className = 'spelling-input';
+    document.getElementById('feedback').classList.remove('show', 'correct', 'wrong');
+    document.getElementById('checkBtn').style.display = 'inline-block';
+    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('playBtn').disabled = false;
+    
+    const hintText = document.getElementById('hintText');
+    if (currentMode === 'review') {
+        hintText.textContent = '提示：' + currentWord.word.charAt(0) + '... (' + currentWord.word.length + '个字母)';
+    } else {
+        hintText.textContent = '';
+    }
+    
+    document.getElementById('spellingInput').focus();
+    updateStats();
+    setTimeout(() => playWord(), 500);
+}
+
+function updateStats() {
+    const progress = ((currentIndex) / currentWords.length) * 100;
+    document.getElementById('progressBar').style.width = progress + '%';
+    document.getElementById('progressText').textContent = (currentIndex + 1) + '/' + currentWords.length;
+    document.getElementById('score').textContent = score;
+    document.getElementById('streak').textContent = streak;
+}
+
+function playWord() {
+    if (!currentWord) return;
+    speak(currentWord.word);
+    setTimeout(() => {
+        const sentenceUtterance = new SpeechSynthesisUtterance(currentWord.sentence);
+        sentenceUtterance.lang = 'en-US';
+        sentenceUtterance.rate = 0.9;
+        speechSynthesis.speak(sentenceUtterance);
+    }, 1500);
+}
+
+function checkSpelling() {
+    const input = document.getElementById('spellingInput').value.toLowerCase().trim();
+    const correct = currentWord.word.toLowerCase();
+    const feedback = document.getElementById('feedback');
+    const inputEl = document.getElementById('spellingInput');
+    
+    if (!input) {
+        alert('请先输入单词！');
+        return;
+    }
+    
+    if (input === correct) {
+        score += 10;
+        streak++;
+        inputEl.classList.add('correct');
+        feedback.classList.add('show', 'correct');
+        document.getElementById('feedbackText').textContent = '正确！';
+        document.getElementById('correctSpelling').textContent = '';
+    } else {
+        streak = 0;
+        mistakes.push({
+            word: currentWord.word,
+            yourAnswer: input,
+            sentence: currentWord.sentence
+        });
+        addToWordbook(currentWord.word);
+        inputEl.classList.add('wrong');
+        feedback.classList.add('show', 'wrong');
+        document.getElementById('feedbackText').textContent = '再想想看~';
+        document.getElementById('correctSpelling').textContent = '正确拼写: ' + currentWord.word;
+    }
+    
+    document.getElementById('checkBtn').style.display = 'none';
+    document.getElementById('nextBtn').style.display = 'inline-block';
+    updateStats();
+}
+
+function nextWord() {
+    currentIndex++;
+    if (currentIndex >= currentWords.length) {
+        showResults();
+    } else {
+        loadWord();
+    }
+}
+
+function showResults() {
+    document.getElementById('gameArea').classList.remove('active');
+    document.getElementById('resultScreen').classList.add('active');
+    
+    document.getElementById('finalScore').textContent = score + '/100';
+    
+    let message = '';
+    let trophy = '';
+    if (score >= 90) {
+        trophy = '金牌';
+        message = '太厉害了！你是拼写大师！';
+    } else if (score >= 70) {
+        trophy = '银牌';
+        message = '做得不错！继续加油！';
+    } else if (score >= 50) {
+        trophy = '铜牌';
+        message = '还可以，多多练习会更好！';
+    } else {
+        trophy = '继续加油';
+        message = '别灰心，多练习就能进步！';
+    }
+    document.getElementById('trophy').textContent = trophy;
+    document.getElementById('resultMessage').textContent = message;
+    
+    if (mistakes.length > 0) {
+        document.getElementById('mistakesReview').style.display = 'block';
+        document.getElementById('mistakesList').innerHTML = mistakes.map(m => '<div class="mistake-item"><div><strong style="color: #c53030;">'+m.word+'</strong><div style="font-size: 0.85em; color: #718096; margin-top: 5px;">'+m.sentence+'</div></div><div style="color: #e53e3e;">你写了: '+m.yourAnswer+'</div></div>').join('');
+    } else {
+        document.getElementById('mistakesReview').style.display = 'none';
+    }
+    
+    const newWords = mistakes.filter(m => wordbook.includes(m.word)).map(m => m.word);
+    if (newWords.length > 0) {
+        document.getElementById('resultWordbook').style.display = 'block';
+        document.getElementById('resultWordbookCount').textContent = newWords.length + '词';
+        document.getElementById('resultWordbookList').innerHTML = newWords.map(w => '<span class="wordbook-item">'+w+'</span>').join('');
+    } else {
+        document.getElementById('resultWordbook').style.display = 'none';
+    }
+}
+
+function restartGame() {
+    startGame(currentGrade);
+}
+
+function startReviewMode() {
+    if (wordbook.length === 0) {
+        alert('错词本为空，先去练习吧！');
+        return;
+    }
+    setMode('review');
+    startGame(currentGrade);
+}
+
+function changeGrade() {
+    document.getElementById('resultScreen').classList.remove('active');
+    document.getElementById('startScreen').style.display = 'block';
+    setMode('normal');
+}
+
+window.onload = function() {
+    loadWordbook();
+};
+</script>
+</body>
+</html>
