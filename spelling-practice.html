@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 英文拼写小达人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #5a67d8;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .grade-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .grade-btn {
+            padding: 12px 30px;
+            border: 3px solid #5a67d8;
+            background: white;
+            color: #5a67d8;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .grade-btn:hover, .grade-btn.active {
+            background: #5a67d8;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: #f7fafc;
+            padding: 15px 25px;
+            border-radius: 15px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            color: #2d3748;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .word-display {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .word-btn {
+            background: #5a67d8;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(90,103,216,0.4);
+        }
+
+        .word-btn:hover {
+            transform: scale(1.05);
+            background: #4c51bf;
+        }
+
+        .word-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .input-area {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .spelling-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5em;
+            border: 3px solid #e2e8f0;
+            border-radius: 15px;
+            text-align: center;
+            text-transform: lowercase;
+            transition: border-color 0.3s;
+        }
+
+        .spelling-input:focus {
+            outline: none;
+            border-color: #5a67d8;
+        }
+
+        .spelling-input.correct {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .spelling-input.wrong {
+            border-color: #f56565;
+            background: #fff5f5;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #5a67d8;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4c51bf;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .feedback {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: bounce 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .feedback.correct {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .feedback.wrong {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .feedback-text {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .correct-spelling {
+            font-size: 1.8em;
+            margin-top: 10px;
+            color: #c53030;
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .result-screen.active {
+            display: block;
+        }
+
+        .trophy {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .final-score {
+            font-size: 3em;
+            color: #5a67d8;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .result-message {
+            font-size: 1.3em;
+            color: #4a5568;
+            margin-bottom: 30px;
+        }
+
+        .mistakes-review {
+            background: #fff5f5;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .mistake-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .difficulty-hint {
+            color: #718096;
+            font-size: 0.95em;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .speaker-icon {
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 英文拼写小达人</h1>
+        <p class="subtitle">Grade 4-5 Spelling Practice</p>
+
+        <!-- 年级选择 -->
+        <div class="start-screen" id="startScreen">
+            <p style="margin-bottom: 20px; color: #4a5568;">选择你的年级开始练习：</p>
+            <div class="grade-selector">
+                <button class="grade-btn" onclick="startGame(4)">四年级</button>
+                <button class="grade-btn" onclick="startGame(5)">五年级</button>
+            </div>
+            <div class="difficulty-hint">
+                <p><strong>四年级：</strong>多音节词、前缀后缀、同音异义词</p>
+                <p><strong>五年级：</strong>复杂拼写模式、学术词汇、希腊拉丁词根</p>
+            </div>
+        </div>
+
+        <!-- 游戏区域 -->
+        <div class="game-area" id="gameArea">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">进度</div>
+                    <div class="stat-value" id="progressText">1/10</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">得分</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">连对</div>
+                    <div class="stat-value" id="streak">0</div>
+                </div>
+            </div>
+
+            <div class="word-display">
+                <button class="word-btn" id="playBtn" onclick="playWord()">
+                    <span class="speaker-icon">🔊</span>
+                    <span>点击听单词</span>
+                </button>
+            </div>
+
+            <div class="feedback" id="feedback">
+                <div class="feedback-text" id="feedbackText"></div>
+                <div class="correct-spelling" id="correctSpelling"></div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" 
+                       class="spelling-input" 
+                       id="spellingInput" 
+                       placeholder="输入你听到的单词..."
+                       onkeypress="if(event.key==='Enter') checkSpelling()">
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="playWord()">🔊 再听一遍</button>
+                <button class="btn btn-primary" id="checkBtn" onclick="checkSpelling()">✓ 检查</button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextWord()" style="display:none;">→ 下一个</button>
+            </div>
+        </div>
+
+        <!-- 结果页面 -->
+        <div class="result-screen" id="resultScreen">
+            <div class="trophy" id="trophy">🏆</div>
+            <div class="final-score" id="finalScore">0/10</div>
+            <div class="result-message" id="resultMessage"></div>
+            
+            <div class="mistakes-review" id="mistakesReview" style="display:none;">
+                <h3 style="margin-bottom: 15px; color: #c53030;">📚 错题复习</h3>
+                <div id="mistakesList"></div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="restartGame()">🔄 再练一次</button>
+                <button class="btn btn-primary" onclick="changeGrade()">📚 换年级</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 词库 - 基于美国四五年级课程标准
+        const wordBank = {
+            4: [
+                { word: "beautiful", sentence: "The sunset was beautiful yesterday." },
+                { word: "necessary", sentence: "Is it necessary to bring a jacket?" },
+                { word: "neighbor", sentence: "My neighbor has a friendly dog." },
+                { word: "knowledge", sentence: "Reading gives us knowledge." },
+                { word: "believe", sentence: "I believe you can do it!" },
+                { word: "receive", sentence: "Did you receive my letter?" },
+                { word: "weird", sentence: "That was a weird dream." },
+                { word: "friend", sentence: "She is my best friend." },
+                { word: "said", sentence: "He said he would come." },
+                { word: "because", sentence: "I stayed home because it was raining." },
+                { word: "question", sentence: "Do you have a question?" },
+                { word: "answer", sentence: "What is the answer?" },
+                { word: "different", sentence: "These two books are different." },
+                { word: "important", sentence: "This is very important." },
+                { word: "remember", sentence: "Remember to bring your lunch." },
+                { word: "tomorrow", sentence: "I will see you tomorrow." },
+                { word: "yesterday", sentence: "What did you do yesterday?" },
+                { word: "accident", sentence: "It was just an accident." },
+                { word: "actually", sentence: "I actually like vegetables." },
+                { word: "address", sentence: "What is your home address?" },
+                { word: "against", sentence: "Don't lean against the wall." },
+                { word: "although", sentence: "Although it was cold, we went outside." },
+                { word: "animal", sentence: "My favorite animal is a tiger." },
+                { word: "another", sentence: "Can I have another cookie?" },
+                { word: "arrive", sentence: "We will arrive at noon." },
+                { word: "attention", sentence: "Pay attention to the teacher." },
+                { word: "bottom", sentence: "The book is at the bottom of my bag." },
+                { word: "bought", sentence: "She bought a new dress." },
+                { word: "bright", sentence: "The sun is very bright today." },
+                { word: "business", sentence: "My dad owns a business." }
+            ],
+            5: [
+                { word: "accomplish", sentence: "You can accomplish anything with hard work." },
+                { word: "accurate", sentence: "Make sure your answer is accurate." },
+                { word: "anonymous", sentence: "The author remained anonymous." },
+                { word: "apparent", sentence: "It was apparent that she was tired." },
+                { word: "approximate", sentence: "Give me an approximate number." },
+                { word: "conscience", sentence: "My conscience told me to tell the truth." },
+                { word: "conscious", sentence: "Are you conscious of the time?" },
+                { word: "consequence", sentence: "Every action has a consequence." },
+                { word: "comparison", sentence: "Let's make a comparison." },
+                { word: "concentrate", sentence: "Concentrate on your homework." },
+                { word: "criticize", sentence: "Don't criticize others unfairly." },
+                { word: "curiosity", sentence: "Curiosity leads to discovery." },
+                { word: "democracy", sentence: "We live in a democracy." },
+                { word: "demonstrate", sentence: "Can you demonstrate how it works?" },
+                { word: "description", sentence: "Write a description of the scene." },
+                { word: "desperate", sentence: "The team was desperate to win." },
+                { word: "determination", sentence: "Her determination helped her succeed." },
+                { word: "development", sentence: "The development took five years." },
+                { word: "difference", sentence: "What is the difference between them?" },
+                { word: "difficult", sentence: "This problem is very difficult." },
+                { word: "direction", sentence: "Which direction should we go?" },
+                { word: "disappear", sentence: "The magician made the rabbit disappear." },
+                { word: "discover", sentence: "Scientists discover new things every day." },
+                { word: "discussion", sentence: "We had a long discussion about it." },
+                { word: "efficient", sentence: "This method is very efficient." },
+                { word: "environment", sentence: "We must protect the environment." },
+                { word: "equivalent", sentence: "These two words are equivalent." },
+                { word: "especially", sentence: "I especially like chocolate ice cream." },
+                { word: "eventually", sentence: "Eventually, the rain stopped." },
+                { word: "evidence", sentence: "The detective found evidence." }
+            ]
+        };
+
+        let currentGrade = 4;
+        let currentWords = [];
+        let currentIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let mistakes = [];
+        let currentWord = null;
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function startGame(grade) {
+            currentGrade = grade;
+            currentWords = shuffleArray(wordBank[grade]).slice(0, 10);
+            currentIndex = 0;
+            score = 0;
+            streak = 0;
+            mistakes = [];
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameArea').classList.add('active');
+            document.getElementById('resultScreen').classList.remove('active');
+            
+            updateStats();
+            loadWord();
+        }
+
+        function loadWord() {
+            currentWord = currentWords[currentIndex];
+            document.getElementById('spellingInput').value = '';
+            document.getElementById('spellingInput').className = 'spelling-input';
+            document.getElementById('feedback').classList.remove('show', 'correct', 'wrong');
+            document.getElementById('checkBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('spellingInput').focus();
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            const progress = ((currentIndex) / currentWords.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = (currentIndex + 1) + '/' + currentWords.length;
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = streak;
+        }
+
+        function playWord() {
+            if (!currentWord) return;
+            
+            const utterance = new SpeechSynthesisUtterance(currentWord.word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8;
+            utterance.pitch = 1;
+            
+            speechSynthesis.speak(utterance);
+            
+            // 3秒后播放例句
+            setTimeout(() => {
+                const sentenceUtterance = new SpeechSynthesisUtterance(currentWord.sentence);
+                sentenceUtterance.lang = 'en-US';
+                sentenceUtterance.rate = 0.9;
+                speechSynthesis.speak(sentenceUtterance);
+            }, 1500);
+        }
+
+        function checkSpelling() {
+            const input = document.getElementById('spellingInput').value.toLowerCase().trim();
+            const correct = currentWord.word.toLowerCase();
+            const feedback = document.getElementById('feedback');
+            const inputEl = document.getElementById('spellingInput');
+            
+            if (!input) {
+                alert('请先输入单词！');
+                return;
+            }
+            
+            if (input === correct) {
+                // 正确
+                score += 10 + (streak * 2);
+                streak++;
+                inputEl.classList.add('correct');
+                feedback.classList.add('show', 'correct');
+                document.getElementById('feedbackText').textContent = ['太棒了！', '完美！', '厉害！', '正确！'][Math.floor(Math.random() * 4)];
+                document.getElementById('correctSpelling').textContent = '';
+            } else {
+                // 错误
+                streak = 0;
+                mistakes.push({
+                    word: currentWord.word,
+                    yourAnswer: input,
+                    sentence: currentWord.sentence
+                });
+                inputEl.classList.add('wrong');
+                feedback.classList.add('show', 'wrong');
+                document.getElementById('feedbackText').textContent = '再想想看~';
+                document.getElementById('correctSpelling').textContent = '正确拼写: ' + currentWord.word;
+            }
+            
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            updateStats();
+        }
+
+        function nextWord() {
+            currentIndex++;
+            if (currentIndex >= currentWords.length) {
+                showResults();
+            } else {
+                loadWord();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            
+            const percentage = (score / (currentWords.length * 10)) * 100;
+            document.getElementById('finalScore').textContent = Math.round(percentage) + '%';
+            
+            let message = '';
+            let trophy = '';
+            if (percentage >= 90) {
+                trophy = '🏆';
+                message = '太厉害了！你是拼写大师！';
+            } else if (percentage >= 70) {
+                trophy = '🥈';
+                message = '做得不错！继续加油！';
+            } else if (percentage >= 50) {
+                trophy = '🥉';
+                message = '还可以，多多练习会更好！';
+            } else {
+                trophy = '📚';
+                message = '别灰心，多练习就能进步！';
+            }
+            document.getElementById('trophy').textContent = trophy;
+            document.getElementById('resultMessage').textContent = message;
+            
+            // 显示错题
+            if (mistakes.length > 0) {
+                document.getElementById('mistakesReview').style.display = 'block';
+                const mistakesList = document.getElementById('mistakesList');
+                mistakesList.innerHTML = mistakes.map(m => `
+                    <div class="mistake-item">
+                        <div>
+                            <strong style="color: #c53030;">${m.word}</strong>
+                            <div style="font-size: 0.85em; color: #718096; margin-top: 5px;">${m.sentence}</div>
+                        </div>
+                        <div style="color: #e53e3e;">你写了: ${m.yourAnswer}</div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('mistakesReview').style.display = 'none';
+            }
+        }
+
+        function restartGame() {
+            startGame(currentGrade);
+        }
+
+        function changeGrade() {
+            document.getElementById('resultScreen').classList.remove('active');
+            document.getElementById('startScreen').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
